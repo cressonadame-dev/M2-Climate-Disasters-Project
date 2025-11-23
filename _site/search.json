@@ -1,9 +1,0 @@
-[
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Climate change and natural disasters",
-    "section": "",
-    "text": "Introduction\nCeci est un exemple de fichier Quarto (.qmd).\nTu peux mélanger du texte, du code, et générer des documents HTML, PDF ou Word.\n\n\nSection 1 : Simple Text\nQuarto utilise une syntaxe proche de Markdown, avec quelques extensions superbes :\n\ngras\nitalique\nLien\nTableaux, citations, etc.\n\n\n\nSection 2 : Code R\n\n# Exemple de code R\nx &lt;- c(1, 2, 3, 4, 5)\ny &lt;- c(3, 5, 2, 8, 7)\n\nplot(x, y, type = \"l\",\n     main = \"Line Graph\",\n     xlab = \"X\",\n     ylab = \"Y\")"
-  }
-]
