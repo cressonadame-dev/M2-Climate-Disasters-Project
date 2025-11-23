@@ -23,10 +23,15 @@ jobs:
       # 2. On installe les librairies R (ggplot2, dplyr, etc.)
       # Si vous utilisez renv, cela va lire votre renv.lock.
       # Sinon, cela aide à préparer l'environnement.
-      - name: Setup R dependencies
-        uses: r-lib/actions/setup-renv@v2
+      - name: Install R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          cache-version: 1
+          packages: |
+            any::knitr
+            any::rmarkdown
+            any::jsonlite
+            any::downlit
+            any::xml2
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
