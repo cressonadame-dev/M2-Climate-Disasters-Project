@@ -14,15 +14,26 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      # 1. On installe R (C'est ce qui manquait !)
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+
+      # 2. On installe les librairies R (ggplot2, dplyr, etc.)
+      # Si vous utilisez renv, cela va lire votre renv.lock.
+      # Sinon, cela aide à préparer l'environnement.
+      - name: Setup R dependencies
+        uses: r-lib/actions/setup-renv@v2
+        with:
+          cache-version: 1
+
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      # Étape 1 : On construit le site (cela crée le dossier _site)
       - name: Render Quarto Project
         uses: quarto-dev/quarto-actions/render@v2
 
-      # Étape 2 : On déploie le dossier _site sur la branche gh-pages
-      # Cette action est plus robuste et créera la branche si besoin
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
