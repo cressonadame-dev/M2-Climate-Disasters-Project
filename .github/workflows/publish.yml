@@ -1,9 +1,9 @@
 on:
-  workflow_dispatch:
   push:
     branches: main
+  workflow_dispatch:
 
-name: Quarto Publish
+name: Render and Deploy
 
 jobs:
   build-deploy:
@@ -17,9 +17,14 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Render and Publish
-        uses: quarto-dev/quarto-actions/publish@v2
+      # Étape 1 : On construit le site (cela crée le dossier _site)
+      - name: Render Quarto Project
+        uses: quarto-dev/quarto-actions/render@v2
+
+      # Étape 2 : On déploie le dossier _site sur la branche gh-pages
+      # Cette action est plus robuste et créera la branche si besoin
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          target: gh-pages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
