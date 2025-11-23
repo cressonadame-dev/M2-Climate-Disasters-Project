@@ -1,0 +1,40 @@
+---
+title: "Climate change and natural disasters"
+author: "Adame Cresson"
+date: "2025-12-01"
+format:
+  html:
+    toc: true
+    theme: cosmo
+navbar:
+  left:
+    - text: "Accueil"
+      href: index.html
+---
+
+# Introduction
+
+Ceci est un exemple de fichier **Quarto (.qmd)**.  
+Tu peux mélanger du texte, du code, et générer des documents HTML, PDF ou Word.
+
+# Section 1 : Simple Text
+
+Quarto utilise une syntaxe proche de Markdown, avec quelques extensions superbes :
+
+- **gras**
+- *italique*
+- [Lien](https://quarto.org)
+- Tableaux, citations, etc.
+
+# Section 2 : Code R
+
+```{r}
+# Exemple de code R
+x <- c(1, 2, 3, 4, 5)
+y <- c(3, 5, 2, 8, 7)
+
+plot(x, y, type = "l",
+     main = "Line Graph",
+     xlab = "X",
+     ylab = "Y")
+```

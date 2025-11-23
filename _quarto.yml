@@ -1,0 +1,14 @@
+project:
+  type: website
+  output-dir: _site
+
+editor:
+  render-on-save: true
+
+website:
+  title: "Climate change and natural disasters"
+  navbar:
+    left:
+      - text: "Accueil"
+        href: index.qmd
+  
