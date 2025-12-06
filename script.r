@@ -67,9 +67,13 @@ temperatures_mois$temperature_moyenne = round(x = temperatures_mois$temperature_
 
 
 # On join l'analyse du dataset de météo france avec celle des catastrophes
+
 res = res[temperatures_mois, on = list(month, year)]
 res
 
-mkdir("./output", showWarnings = FALSE)
+if (!dir.exists("output")) {
+  dir.create("output")
+}
+
 fwrite(res, "./output/result.csv")
 
