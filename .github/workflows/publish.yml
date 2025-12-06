@@ -33,9 +33,16 @@ jobs:
             any::downlit
             any::xml2
             any::data.table
+            any::R.utils
       
       - name: Run my R script
         run: Rscript script.r
+
+      - name: Upload result.csv as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: result-csv
+          path: ./output/result.csv
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
