@@ -39,7 +39,7 @@ jobs:
         run: Rscript script.r
 
       - name: Upload result.csv as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: result-csv
           path: ./output/result.csv
