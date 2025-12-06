@@ -32,7 +32,7 @@ jobs:
             any::jsonlite
             any::downlit
             any::xml2
-            any::data.table@1.14.8
+            any::data.table
       
       - name: Run my R script
         run: Rscript script.R
