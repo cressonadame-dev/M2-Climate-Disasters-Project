@@ -74,4 +74,3 @@ if (!dir.exists("output")) {
 }
 
 fwrite(res, "./output/result.csv", scipen = 999)
-
