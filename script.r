@@ -20,11 +20,14 @@ nrow(catastrophes)
 nrow(catastrophes_dates_remplies)
 nrow(catastrophes_francaises)
 
+# On renomme la colonne des températures pour préciser que c'est des Kelvin ici pour y voir plus clair
 setnames(synop, old = "t", new = "t_kelvin")
+
 # On crée une colonne pour avoir les températures en C° dès le départ
 synop[, "t_celsius"] = synop[, t_kelvin - 273.15]
 synop
 
+# Tronche du dataset final
 result = data.table(
   year = integer(),
   month = integer(),
