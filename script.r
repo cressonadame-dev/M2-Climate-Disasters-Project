@@ -14,7 +14,6 @@ catastrophes_dates_remplies = catastrophes[!is.na(start_month) & !is.na(start_ye
 # Ici on garde que les catastrophes françaises
 catastrophes_francaises = catastrophes_dates_remplies[country == "France"]
 
-# Filtrer le dataset des 
 # On affiche les tailles des datasets, on voit bien que les filtres font leurs effets
 nrow(catastrophes)
 nrow(catastrophes_dates_remplies)
