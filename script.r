@@ -1,5 +1,3 @@
-install.packages("data.table")
-
 library(data.table)
 
 catastrophes = fread("./datas/catastrophes.csv")
