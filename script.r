@@ -75,5 +75,5 @@ if (!dir.exists("output")) {
   dir.create("output")
 }
 
-fwrite(res, "./output/result.csv")
+fwrite(res, "./output/result.csv", scipen = 999)
 
