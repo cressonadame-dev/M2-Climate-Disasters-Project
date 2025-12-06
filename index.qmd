@@ -29,12 +29,7 @@ Quarto utilise une syntaxe proche de Markdown, avec quelques extensions superbes
 # Section 2 : Code R
 
 ```{r}
-# Exemple de code R
-x <- c(1, 2, 3, 4, 5)
-y <- c(3, 5, 2, 8, 7)
-
-plot(x, y, type = "l",
-     main = "Line Graph",
-     xlab = "X",
-     ylab = "Y")
+library("data.table")
+analyse = fread("./output/result.csv")
+analyse
 ```
