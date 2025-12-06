@@ -36,7 +36,7 @@ jobs:
             any::R.utils
       
       - name: Run my R script
-        run: Rscript script.r
+        run: Rscript script.R
 
       - name: Upload result.csv as artifact
         uses: actions/upload-artifact@v4
