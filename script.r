@@ -3,6 +3,8 @@ install.packages("data.table")
 library(data.table)
 
 catastrophes = fread("./datas/catastrophes.csv")
+
+# Renommage des colonnes pour plus de clarté
 setnames(catastrophes, old = "start_month", new = "month")
 setnames(catastrophes, old = "start_year", new = "year")
 
