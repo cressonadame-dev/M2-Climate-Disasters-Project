@@ -30,7 +30,7 @@ nrow(catastrophes_dates_remplies)
 nrow(catastrophes_francaises)
 
 # Affichage des catastrophes naturelles apparues en juin 2013
-catastrophes_francaises[month == 1 & year == 2013]
+catastrophes_francaises[month == 6 & year == 2013]
 
 # On commence à construire le dataset de sortie
 # Ici on group by par mois et année et pour chaque clé on calcule la moyenne des
@@ -70,6 +70,6 @@ temperatures_mois$temperature_moyenne = round(x = temperatures_mois$temperature_
 res = res[temperatures_mois, on = list(month, year)]
 res
 
-
+mkdir("./output", showWarnings = FALSE)
 fwrite(res, "./output/result.csv")
 

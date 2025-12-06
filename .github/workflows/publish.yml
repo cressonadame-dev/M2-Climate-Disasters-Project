@@ -32,6 +32,10 @@ jobs:
             any::jsonlite
             any::downlit
             any::xml2
+            any::data.table@1.14.8
+      
+      - name: Run my R script
+        run: Rscript script.R
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
