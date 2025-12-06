@@ -35,7 +35,7 @@ jobs:
             any::data.table
       
       - name: Run my R script
-        run: Rscript script.R
+        run: Rscript script.r
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
