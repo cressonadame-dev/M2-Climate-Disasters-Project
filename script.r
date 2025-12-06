@@ -9,7 +9,7 @@ synop = fread("./datas/synop.csv.gz")
 
 # Ici on vire toutes les catastrophes pour lesquelles on ne connait pas l'info précise de sa date de début
 # On pourrait potentiellement remplacer les valeurs absentes ?? Par exemple si il manque le jour, mettre le 1 du mois ?
-catastrophes_dates_remplies = catastrophes[!is.na(start_day) & !is.na(start_month) & !is.na(start_year)]
+catastrophes_dates_remplies = catastrophes[!is.na(start_month) & !is.na(start_year)]
 
 # Ici on garde que les catastrophes françaises
 catastrophes_francaises = catastrophes_dates_remplies[country == "France"]
