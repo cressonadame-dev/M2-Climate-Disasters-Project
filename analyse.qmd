@@ -4,26 +4,62 @@ format: html
 editor: visual
 ---
 
-## Hypothèses
-
-Nous testons deux hypothèses principales :
-
-1. Une hausse des températures augmente la **fréquence** des catastrophes naturelles.
-2. Une hausse des températures augmente les **dommages humains et économiques**.
-
-## Analyse graphique
-
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(data.table)
 library(ggplot2)
 library(plotly)
+library(broom)
+library(lmtest)
+library(sandwich)
 
-df <- fread("output/result.csv")
+# On utilise uniquement output.csv (produit par script.r)
+df <- fread("./output/result.csv")
+
+# Types + index de temps mensuel
+df[, month := as.integer(month)]
+df[, year  := as.integer(year)]
+df[, date  := as.IDate(sprintf("%04d-%02d-01", year, month))]
+
+# Transformations (stabiliser les variables très asymétriques)
+df[, ln_dommages := log1p(dommages_dollars)]
+df[, ln_morts    := log1p(morts_moyen)]
+
+# Filtre minimal
+df <- df[!is.na(temperature_moyenne) & !is.na(nb_desastres)]
 ```
-# Température vs nombre de catastrophes
-```{r, message=FALSE, warning=FALSE}
-p <- ggplot(df, aes(x = temperature_moyenne, y = nb_desastres)) +
-  geom_point(alpha = 0.5, color = "#9467bd") +
+
+## Hypothèses
+
+- Une hausse des températures augmente la **fréquence** des catastrophes naturelles (nombre mensuel).
+- Une hausse des températures augmente les **dommages** économiques et les pertes humaines.
+
+## Graphiques
+
+### Séries temporelles
+
+```{r}
+p_temp <- ggplot(df, aes(x = date, y = temperature_moyenne)) +
+  geom_line(color = "#1f77b4", linewidth = 0.7) +
+  labs(title = "Température moyenne mensuelle", x = NULL, y = "°C") +
+  theme_minimal()
+
+ggplotly(p_temp)
+```
+
+```{r}
+p_n <- ggplot(df, aes(x = date, y = nb_desastres)) +
+  geom_col(fill = "#9467bd", alpha = 0.85) +
+  labs(title = "Nombre mensuel de catastrophes", x = NULL, y = "Nb") +
+  theme_minimal()
+
+ggplotly(p_n)
+```
+
+### Relations bivariées
+
+```{r}
+p1 <- ggplot(df, aes(x = temperature_moyenne, y = nb_desastres)) +
+  geom_point(alpha = 0.55, color = "#9467bd") +
   geom_smooth(method = "lm", se = TRUE, color = "black") +
   labs(
     title = "Température et fréquence des catastrophes",
@@ -32,15 +68,87 @@ p <- ggplot(df, aes(x = temperature_moyenne, y = nb_desastres)) +
   ) +
   theme_minimal()
 
-ggplotly(p)
+ggplotly(p1)
 ```
 
+```{r}
+p2 <- ggplot(df, aes(x = temperature_moyenne, y = ln_dommages)) +
+  geom_point(alpha = 0.55, color = "#d62728") +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
+  labs(
+    title = "Température et dommages économiques",
+    x = "Température moyenne (°C)",
+    y = "log(1 + dommages en $)"
+  ) +
+  theme_minimal()
 
-```{r, message=FALSE, warning=FALSE}
-model1 <- lm(nb_desastres ~ temperature_moyenne, data = df)
-model2 <- lm(dommages_dollars ~ temperature_moyenne, data = df)
+ggplotly(p2)
+```
 
+```{r}
+p3 <- ggplot(df, aes(x = temperature_moyenne, y = ln_morts)) +
+  geom_point(alpha = 0.55, color = "#2ca02c") +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
+  labs(
+    title = "Température et victimes",
+    x = "Température moyenne (°C)",
+    y = "log(1 + morts moyens)"
+  ) +
+  theme_minimal()
 
-summary(model1)
-summary(model2)
+ggplotly(p3)
+```
+
+## Régressions
+
+### Modèles simples
+
+```{r}
+m_freq <- lm(nb_desastres ~ temperature_moyenne, data = df)
+m_dmg  <- lm(ln_dommages  ~ temperature_moyenne, data = df)
+m_dead <- lm(ln_morts     ~ temperature_moyenne, data = df)
+
+summary(m_freq)
+summary(m_dmg)
+summary(m_dead)
+```
+
+### Contrôle de la saisonnalité + tendance
+
+```{r}
+m_freq_fe <- lm(nb_desastres ~ temperature_moyenne + factor(month) + year, data = df)
+m_dmg_fe  <- lm(ln_dommages  ~ temperature_moyenne + factor(month) + year, data = df)
+m_dead_fe <- lm(ln_morts     ~ temperature_moyenne + factor(month) + year, data = df)
+
+summary(m_freq_fe)
+summary(m_dmg_fe)
+summary(m_dead_fe)
+```
+
+### Variante avec anomalie (diff_moyenne_mois)
+
+```{r}
+m_freq_gap <- lm(nb_desastres ~ diff_moyenne_mois + factor(month) + year, data = df)
+m_dmg_gap  <- lm(ln_dommages  ~ diff_moyenne_mois + factor(month) + year, data = df)
+m_dead_gap <- lm(ln_morts     ~ diff_moyenne_mois + factor(month) + year, data = df)
+
+summary(m_freq_gap)
+summary(m_dmg_gap)
+summary(m_dead_gap)
+```
+
+### Erreurs-types robustes (HC1)
+
+```{r}
+coeftest(m_freq_fe, vcov. = vcovHC(m_freq_fe, type = "HC1"))
+coeftest(m_dmg_fe,  vcov. = vcovHC(m_dmg_fe,  type = "HC1"))
+coeftest(m_dead_fe, vcov. = vcovHC(m_dead_fe, type = "HC1"))
+```
+
+### Tables de résultats (broom)
+
+```{r}
+knitr::kable(tidy(m_freq_fe), digits = 3, caption = "Fréquence : nb_desastres ~ température + FE mois + année")
+knitr::kable(tidy(m_dmg_fe),  digits = 3, caption = "Dommages : log(1+dommages) ~ température + FE mois + année")
+knitr::kable(tidy(m_dead_fe), digits = 3, caption = "Victimes : log(1+morts) ~ température + FE mois + année")
 ```
