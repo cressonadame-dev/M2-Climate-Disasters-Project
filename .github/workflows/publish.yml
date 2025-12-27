@@ -34,6 +34,11 @@ jobs:
             any::xml2
             any::data.table
             any::R.utils
+            any::ggplot2
+            any::plotly
+            any::broom
+            any::lmtest
+            any::sandwich
       
       - name: Run my R script
         run: Rscript script.r
