@@ -1,0 +1,46 @@
+---
+title: "Analyse du lien climat–catastrophes"
+format: html
+editor: visual
+---
+
+## Hypothèses
+
+Nous testons deux hypothèses principales :
+
+1. Une hausse des températures augmente la **fréquence** des catastrophes naturelles.
+2. Une hausse des températures augmente les **dommages humains et économiques**.
+
+## Analyse graphique
+
+```{r}
+library(data.table)
+library(ggplot2)
+library(plotly)
+
+df <- fread("output/result.csv")
+```
+# Température vs nombre de catastrophes
+```{r, message=FALSE, warning=FALSE}
+p <- ggplot(df, aes(x = temperature_moyenne, y = nb_desastres)) +
+  geom_point(alpha = 0.5, color = "#9467bd") +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
+  labs(
+    title = "Température et fréquence des catastrophes",
+    x = "Température moyenne (°C)",
+    y = "Nombre de catastrophes"
+  ) +
+  theme_minimal()
+
+ggplotly(p)
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+model1 <- lm(nb_desastres ~ temperature_moyenne, data = df)
+model2 <- lm(dommages_dollars ~ temperature_moyenne, data = df)
+
+
+summary(model1)
+summary(model2)
+```

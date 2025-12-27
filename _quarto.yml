@@ -9,6 +9,14 @@ website:
   title: "Climate change and natural disasters"
   navbar:
     left:
-      - text: "Accueil"
-        href: index.qmd
-  
+      - href: index.qmd
+        text: Accueil
+      - href: descriptives.qmd
+        text: Descriptives
+      - href: analyse.qmd
+        text: Analyse
+
+format:
+  html:
+    theme: cosmo
+    toc: true

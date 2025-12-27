@@ -1,35 +1,33 @@
 ---
 title: "Climate change and natural disasters"
-author: "Adame Cresson"
+author: "Adame Cresson et al."
 date: "2025-12-01"
-format:
-  html:
-    toc: true
-    theme: cosmo
-navbar:
-  left:
-    - text: "Accueil"
-      href: index.html
+format: html
 ---
 
-# Introduction
+# Bienvenue
 
-Ceci est un exemple de fichier **Quarto (.qmd)**.  
-Tu peux mélanger du texte, du code, et générer des documents HTML, PDF ou Word.
+Bienvenue sur ce site présentant notre projet **M2 Environnement** sur le lien entre changement climatique et catastrophes naturelles en France.
 
-# Section 1 : Simple Text
+Ce site contient :
 
-Quarto utilise une syntaxe proche de Markdown, avec quelques extensions superbes :
+- Une page de statistiques descriptives sur les températures et les catastrophes.
+- Une page d’analyse du lien entre anomalies de température et catastrophes.
 
-- **gras**
-- *italique*
-- [Lien](https://quarto.org)
-- Tableaux, citations, etc.
+# Membres du groupe
 
-# Section 2 : Code R
+- Nom Prénom 1  
+- Nom Prénom 2  
+- Nom Prénom 3  
+- Nom Prénom 4  
+- Nom Prénom 5  
 
-```{r}
-library("data.table")
-analyse = fread("./output/result.csv")
-analyse
-```
+# Structure du projet
+
+- **Data management** : réalisé dans un script R séparé (`script.R`), qui construit un fichier `output/result.csv` contenant les données mensuelles (température moyenne, écart à la moyenne, nombre de catastrophes, morts, dégâts).
+- **Ce site** : présente uniquement les résultats, sans code de data management, comme demandé dans l’énoncé du projet M2.
+
+# Navigation
+
+- [Page descriptives](descriptives.html)  
+- [Page d’analyse](analyse.html)

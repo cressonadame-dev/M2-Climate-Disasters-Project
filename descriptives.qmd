@@ -1,0 +1,38 @@
+---
+title: "Statistiques descriptives"
+format: html
+editor: visual
+---
+```{r}
+
+```
+
+
+## Données utilisées
+
+Les données ont été agrégées au **niveau mensuel** et contiennent :
+- la température moyenne mensuelle (°C),
+- l’écart à la moyenne historique mensuelle,
+- le nombre de catastrophes naturelles,
+- le nombre de morts,
+- le montant total des dégâts (USD).
+
+## Évolution temporelle
+
+
+
+```{r}
+library(data.table)
+library(ggplot2)
+```
+
+
+
+# Température moyenne
+```{r}
+df <- fread("output/result.csv")
+ggplot(df, aes(x = year + month/12, y = temperature_moyenne)) +
+  geom_line() +
+  labs(title = "Évolution de la température moyenne mensuelle",
+       x = "Année", y = "Température (°C)")
+```
