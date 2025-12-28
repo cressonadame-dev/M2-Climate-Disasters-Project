@@ -4,21 +4,21 @@
     "href": "descriptives.html",
     "title": "Statistiques descriptives",
     "section": "",
-    "text": "Les données ont été agrégées au niveau mensuel et contiennent : - la température moyenne mensuelle (°C), - l’écart à la moyenne historique mensuelle, - le nombre de catastrophes naturelles, - le nombre de morts, - le montant total des dégâts (USD)."
+    "text": "library(data.table)\nlibrary(ggplot2)"
   },
   {
     "objectID": "descriptives.html#données-utilisées",
     "href": "descriptives.html#données-utilisées",
     "title": "Statistiques descriptives",
-    "section": "",
-    "text": "Les données ont été agrégées au niveau mensuel et contiennent : - la température moyenne mensuelle (°C), - l’écart à la moyenne historique mensuelle, - le nombre de catastrophes naturelles, - le nombre de morts, - le montant total des dégâts (USD)."
+    "section": "Données utilisées",
+    "text": "Données utilisées\nLes données ont été agrégées au niveau mensuel et contiennent : - la température moyenne mensuelle (°C), - l’écart à la moyenne historique mensuelle, - le nombre de catastrophes naturelles, - le nombre de morts, - le montant total des dégâts (USD)."
   },
   {
     "objectID": "descriptives.html#évolution-temporelle",
     "href": "descriptives.html#évolution-temporelle",
     "title": "Statistiques descriptives",
     "section": "Évolution temporelle",
-    "text": "Évolution temporelle\n\nlibrary(data.table)\nlibrary(ggplot2)"
+    "text": "Évolution temporelle"
   },
   {
     "objectID": "index.html",
@@ -32,7 +32,7 @@
     "href": "analyse.html",
     "title": "Analyse du lien climat–catastrophes",
     "section": "",
-    "text": "library(data.table)\nlibrary(ggplot2)\nlibrary(plotly)\nlibrary(broom)\nlibrary(lmtest)\nlibrary(sandwich)\n\n# On utilise uniquement output.csv (produit par script.r)\ndf &lt;- fread(\"./output/result.csv\")\n\n# Types + index de temps mensuel\ndf[, month := as.integer(month)]\ndf[, year  := as.integer(year)]\ndf[, date  := as.IDate(sprintf(\"%04d-%02d-01\", year, month))]\n\n# Transformations (stabiliser les variables très asymétriques)\ndf[, ln_dommages := log1p(dommages_dollars)]\ndf[, ln_morts    := log1p(morts_moyen)]\n\n# Filtre minimal\ndf &lt;- df[!is.na(temperature_moyenne) & !is.na(nb_desastres)]"
+    "text": "library(data.table)\nlibrary(ggplot2)\nlibrary(plotly)\nlibrary(broom)\nlibrary(lmtest)\nlibrary(sandwich)\n\n# On utilise uniquement output.csv (produit par script.r)\ndf &lt;- fread(\"./output/result.csv\")"
   },
   {
     "objectID": "analyse.html#hypothèses",
