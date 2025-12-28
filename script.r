@@ -65,8 +65,21 @@ temperatures_mois$temperature_moyenne = round(x = temperatures_mois$temperature_
 
 
 # On join l'analyse du dataset de météo france avec celle des catastrophes
-
 res = res[temperatures_mois, on = list(month, year)]
+
+# Types + index de temps mensuel
+res[, month := as.integer(month)]
+res[, year  := as.integer(year)]
+res[, date  := as.IDate(sprintf("%04d-%02d-01", year, month))]
+
+# Transformations (stabiliser les variables très asymétriques)
+res[, ln_dommages := log1p(dommages_dollars)]
+res[, ln_morts    := log1p(morts_moyen)]
+
+# Filtre minimal
+res <- res[!is.na(temperature_moyenne) & !is.na(nb_desastres)]
+
+
 res
 
 if (!dir.exists("output")) {

@@ -14,24 +14,12 @@ library(sandwich)
 
 # On utilise uniquement output.csv (produit par script.r)
 df <- fread("./output/result.csv")
-
-# Types + index de temps mensuel
-df[, month := as.integer(month)]
-df[, year  := as.integer(year)]
-df[, date  := as.IDate(sprintf("%04d-%02d-01", year, month))]
-
-# Transformations (stabiliser les variables très asymétriques)
-df[, ln_dommages := log1p(dommages_dollars)]
-df[, ln_morts    := log1p(morts_moyen)]
-
-# Filtre minimal
-df <- df[!is.na(temperature_moyenne) & !is.na(nb_desastres)]
 ```
 
 ## Hypothèses
 
-- Une hausse des températures augmente la **fréquence** des catastrophes naturelles (nombre mensuel).
-- Une hausse des températures augmente les **dommages** économiques et les pertes humaines.
+-   Une hausse des températures augmente la **fréquence** des catastrophes naturelles (nombre mensuel).
+-   Une hausse des températures augmente les **dommages** économiques et les pertes humaines.
 
 ## Graphiques
 

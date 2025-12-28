@@ -3,8 +3,10 @@ title: "Statistiques descriptives"
 format: html
 editor: visual
 ---
-```{r}
 
+```{r}
+library(data.table)
+library(ggplot2)
 ```
 
 
@@ -19,12 +21,6 @@ Les données ont été agrégées au **niveau mensuel** et contiennent :
 
 ## Évolution temporelle
 
-
-
-```{r}
-library(data.table)
-library(ggplot2)
-```
 
 
 
