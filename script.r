@@ -1,3 +1,10 @@
+# Usage de l'IA (ChatGPT, Perplexity, Gemini) :
+# - Relecture et aide sur le code
+# - Suggestions pour la structure des graphiques
+# - Aide à l'interprétation des résultats des régressions
+
+
+
 library(data.table)
 
 catastrophes = fread("./datas/catastrophes.csv")
@@ -79,6 +86,8 @@ res[, ln_morts    := log1p(morts_moyen)]
 # Filtre minimal
 res <- res[!is.na(temperature_moyenne) & !is.na(nb_desastres)]
 
+# Labels mois (pour graphes de saisonnalité)
+res[, month_lab := factor(month, levels = 1:12, labels = month.abb)]
 
 res
 
