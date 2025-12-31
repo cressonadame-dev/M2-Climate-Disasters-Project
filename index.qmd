@@ -16,11 +16,9 @@ Ce site contient :
 
 # Membres du groupe
 
-- Nom Prénom 1  
-- Nom Prénom 2  
-- Nom Prénom 3  
-- Nom Prénom 4  
-- Nom Prénom 5  
+- Cresson Adame  
+- Courtemanche Jeremy  
+ 
 
 # Structure du projet
 

@@ -4,31 +4,201 @@ format: html
 editor: visual
 ---
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(data.table)
 library(ggplot2)
+library(plotly)
+
+# Chargement des données produites par script.r
+df <- fread("./output/result.csv")
 ```
 
+## Aperçu des données
 
-## Données utilisées
+Cette page présente des statistiques descriptives sur les variables mensuelles construites à partir de la météo (température) et des catastrophes naturelles en France.
 
-Les données ont été agrégées au **niveau mensuel** et contiennent :
-- la température moyenne mensuelle (°C),
-- l’écart à la moyenne historique mensuelle,
-- le nombre de catastrophes naturelles,
-- le nombre de morts,
-- le montant total des dégâts (USD).
+```{r}
+periode <- df[, .(
+  debut = min(date, na.rm = TRUE),
+  fin   = max(date, na.rm = TRUE),
+  n_obs = .N
+)]
+
+knitr::kable(periode, caption = "Période couverte et nombre d'observations")
+```
+
+Variables principales (rappel) :
+
+- `temperature_moyenne` : température moyenne mensuelle (°C).
+- `diff_moyenne_mois` : anomalie de température (écart à la moyenne historique du même mois).
+- `nb_desastres` : nombre de catastrophes naturelles sur le mois.
+- `dommages_dollars` : dommages économiques moyens (en $) sur le mois.
+- `morts_moyen` : nombre moyen de morts sur le mois.
+- `ln_dommages` et `ln_morts` : transformations log(1+x) pour limiter l’asymétrie.
+
+## Statistiques globales
+
+```{r}
+desc_one <- function(x) {
+  x <- x[is.finite(x)]
+  if (length(x) == 0) return(list(n = 0, mean = NA, sd = NA, min = NA, p25 = NA, med = NA, p75 = NA, max = NA))
+  q <- quantile(x, probs = c(.25, .5, .75), na.rm = TRUE, names = FALSE)
+  list(
+    n    = length(x),
+    mean = mean(x, na.rm = TRUE),
+    sd   = sd(x, na.rm = TRUE),
+    min  = min(x, na.rm = TRUE),
+    p25  = q[1],
+    med  = q[2],
+    p75  = q[3],
+    max  = max(x, na.rm = TRUE)
+  )
+}
+
+vars <- c("temperature_moyenne", "diff_moyenne_mois", "nb_desastres", "dommages_dollars", "morts_moyen", "ln_dommages", "ln_morts")
+
+tab_desc <- rbindlist(lapply(vars, function(v) {
+  s <- desc_one(df[[v]])
+  data.table(variable = v, n = s$n, mean = s$mean, sd = s$sd, min = s$min, p25 = s$p25, median = s$med, p75 = s$p75, max = s$max)
+}), fill = TRUE)
+
+# Arrondis pour lisibilité
+tab_desc[, `:=`(
+  mean   = round(mean, 3),
+  sd     = round(sd, 3),
+  min    = round(min, 3),
+  p25    = round(p25, 3),
+  median = round(median, 3),
+  p75    = round(p75, 3),
+  max    = round(max, 3)
+)]
+
+knitr::kable(tab_desc, caption = "Statistiques descriptives (niveau mensuel)")
+```
+
+```{r}
+# Corrélations simples sur variables "centrales"
+X <- df[, .(temperature_moyenne, diff_moyenne_mois, nb_desastres, ln_dommages, ln_morts)]
+corr <- round(cor(X, use = "pairwise.complete.obs"), 3)
+knitr::kable(corr, caption = "Corrélations (variables sélectionnées)")
+```
 
 ## Évolution temporelle
-
-
-
-
-# Température moyenne
+Montre la tendance climatique sur toute la période. On cherche à voir s'il y a un réchauffement progressif ou des cycles naturels.
+Interprétation attendue : hausse progressive ou cycles saisonniers marqués.
 ```{r}
-df <- fread("output/result.csv")
-ggplot(df, aes(x = year + month/12, y = temperature_moyenne)) +
-  geom_line() +
-  labs(title = "Évolution de la température moyenne mensuelle",
-       x = "Année", y = "Température (°C)")
+p_temp <- ggplot(df, aes(x = date, y = temperature_moyenne)) +
+  geom_line(color = "#1f77b4", linewidth = 0.7) +
+  labs(title = "Température moyenne mensuelle", x = NULL, y = "°C") +
+  theme_minimal()
+
+ggplotly(p_temp)
+```
+Écart par rapport à la normale du mois (ex: un juillet à +3°C par rapport à la moyenne des jullets historiques).
+Interprétation : les pics positifs indiquent des mois anormalement chauds, les creux des mois anormalement froids.
+```{r}
+p_anom <- ggplot(df, aes(x = date, y = diff_moyenne_mois)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+  geom_line(color = "#17becf", linewidth = 0.7) +
+  labs(title = "Anomalie de température (écart à la moyenne du mois)", x = NULL, y = "°C") +
+  theme_minimal()
+
+ggplotly(p_anom)
+```
+Histogramme montrant la fréquence des catastrophes dans le temps.
+Interprétation : permet de repérer des années/périodes exceptionnelles. Si hausse récente = possiblement lié au climat.
+```{r}
+p_n <- ggplot(df, aes(x = date, y = nb_desastres)) +
+  geom_col(fill = "#9467bd", alpha = 0.85) +
+  labs(title = "Nombre mensuel de catastrophes", x = NULL, y = "Nb") +
+  theme_minimal()
+
+ggplotly(p_n)
+```
+Compare l'évolution des dommages économiques (rouge) et des victimes (vert) en échelle log.
+Interprétation : si les deux courbes évoluent ensemble, cela suggère que les catastrophes graves touchent à la fois l'humain et l'économie. Si divergence = certaines catastrophes font plus de dégâts matériels que de morts (ou l'inverse).
+```{r}
+p_impacts <- ggplot(df, aes(x = date)) +
+  geom_line(aes(y = ln_dommages, color = "Dommages (log1p)"), linewidth = 0.7) +
+  geom_line(aes(y = ln_morts, color = "Morts (log1p)"), linewidth = 0.7) +
+  scale_color_manual(values = c("Dommages (log1p)" = "#d62728", "Morts (log1p)" = "#2ca02c")) +
+  labs(title = "Impacts des catastrophes (échelles stabilisées)", x = NULL, y = "log(1 + x)", color = NULL) +
+  theme_minimal()
+
+ggplotly(p_impacts)
+```
+
+## Saisonnalité
+
+```{r}
+sais <- df[, .(
+  temp_moy = mean(temperature_moyenne, na.rm = TRUE),
+  anom_moy = mean(diff_moyenne_mois, na.rm = TRUE),
+  des_moy  = mean(nb_desastres, na.rm = TRUE),
+  dmg_moy  = mean(ln_dommages, na.rm = TRUE),
+  dead_moy = mean(ln_morts, na.rm = TRUE)
+), by = .(month, month_lab)][order(month)]
+
+knitr::kable(
+  sais[, .(month = month_lab, temp_moy = round(temp_moy, 2), des_moy = round(des_moy, 2), dmg_moy = round(dmg_moy, 2), dead_moy = round(dead_moy, 2))],
+  caption = "Moyennes par mois (saisonnalité)"
+)
+```
+Cycle annuel classique : froid en hiver, chaud en été.
+Interprétation : valide que les données météo sont cohérentes. Sert de référence pour comprendre les anomalies.
+```{r}
+p_sais_temp <- ggplot(sais, aes(x = month_lab, y = temp_moy, group = 1)) +
+  geom_line(color = "#1f77b4", linewidth = 0.8) +
+  geom_point(color = "#1f77b4") +
+  labs(title = "Saisonnalité des températures", x = NULL, y = "°C (moyenne)") +
+  theme_minimal()
+
+ggplotly(p_sais_temp)
+```
+Certains mois concentrent-ils plus de catastrophes ?
+Interprétation : si pic en été = possiblement feux de forêt, canicules. Si pic en hiver = tempêtes, inondations. Permet d'identifier les "saisons à risque".
+```{r}
+p_sais_dis <- ggplot(sais, aes(x = month_lab, y = des_moy, group = 1)) +
+  geom_line(color = "#9467bd", linewidth = 0.8) +
+  geom_point(color = "#9467bd") +
+  labs(title = "Saisonnalité du nombre de catastrophes", x = NULL, y = "Nb (moyenne)") +
+  theme_minimal()
+
+ggplotly(p_sais_dis)
+```
+
+## Distributions
+Forme de la répartition des températures mensuelles.
+Interprétation : si distribution normale (cloche), les températures sont stables. Si bimodale ou étalée = forte variabilité climatique.
+```{r}
+p_hist_temp <- ggplot(df, aes(x = temperature_moyenne)) +
+  geom_histogram(bins = 30, fill = "#1f77b4", alpha = 0.85) +
+  labs(title = "Distribution : température moyenne", x = "°C", y = "Fréquence") +
+  theme_minimal()
+
+ggplotly(p_hist_temp)
+```
+Combien de mois ont 0, 1, 2... catastrophes ?
+Interprétation : si très concentrée à gauche (beaucoup de 0) = événements rares. Queue à droite longue = quelques mois exceptionnels.
+```{r}
+p_hist_n <- ggplot(df, aes(x = nb_desastres)) +
+  geom_histogram(bins = 25, fill = "#9467bd", alpha = 0.85) +
+  labs(title = "Distribution : nombre mensuel de catastrophes", x = "Nb", y = "Fréquence") +
+  theme_minimal()
+
+ggplotly(p_hist_n)
+```
+Compare la forme des distributions de dommages et de morts (en log).
+Interprétation : si les deux courbes sont similaires = proportionnalité entre coûts et victimes. Si rouge plus étalé que vert = forte variabilité des coûts économiques.
+```{r}
+p_hist_logs <- ggplot(
+  melt(df[, .(ln_dommages, ln_morts)], measure.vars = c("ln_dommages", "ln_morts")),
+  aes(x = value, fill = variable)
+) +
+  geom_histogram(bins = 30, alpha = 0.75, position = "identity") +
+  scale_fill_manual(values = c("ln_dommages" = "#d62728", "ln_morts" = "#2ca02c")) +
+  labs(title = "Distributions : impacts (log1p)", x = "log(1 + x)", y = "Fréquence", fill = NULL) +
+  theme_minimal()
+
+ggplotly(p_hist_logs)
 ```

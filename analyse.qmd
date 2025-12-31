@@ -21,27 +21,10 @@ df <- fread("./output/result.csv")
 -   Une hausse des températures augmente la **fréquence** des catastrophes naturelles (nombre mensuel).
 -   Une hausse des températures augmente les **dommages** économiques et les pertes humaines.
 
+On teste si la température moyenne mensuelle est associée (i) au nombre de catastrophes et (ii) à leur sévérité via les dommages et les morts (transformés en log).
+L’idée est de comparer ce qu’on voit visuellement avec ce que confirment (ou non) les régressions
+
 ## Graphiques
-
-### Séries temporelles
-
-```{r}
-p_temp <- ggplot(df, aes(x = date, y = temperature_moyenne)) +
-  geom_line(color = "#1f77b4", linewidth = 0.7) +
-  labs(title = "Température moyenne mensuelle", x = NULL, y = "°C") +
-  theme_minimal()
-
-ggplotly(p_temp)
-```
-
-```{r}
-p_n <- ggplot(df, aes(x = date, y = nb_desastres)) +
-  geom_col(fill = "#9467bd", alpha = 0.85) +
-  labs(title = "Nombre mensuel de catastrophes", x = NULL, y = "Nb") +
-  theme_minimal()
-
-ggplotly(p_n)
-```
 
 ### Relations bivariées
 
@@ -59,6 +42,8 @@ p1 <- ggplot(df, aes(x = temperature_moyenne, y = nb_desastres)) +
 ggplotly(p1)
 ```
 
+chaque point est un mois; la pente de la droite indique si, en moyenne, les mois plus chauds ont davantage de catastrophes, et l’intervalle montre l’incertitude autour de cette tendance.
+
 ```{r}
 p2 <- ggplot(df, aes(x = temperature_moyenne, y = ln_dommages)) +
   geom_point(alpha = 0.55, color = "#d62728") +
@@ -72,6 +57,7 @@ p2 <- ggplot(df, aes(x = temperature_moyenne, y = ln_dommages)) +
 
 ggplotly(p2)
 ```
+la droite de régression affiche une pente négative, ce qui suggère visuellement une relation contre-intuitive : les mois les plus chauds tendraient à être associés à des dommages économiques plus faibles en moyenne, bien que la dispersion très importante des points (la large zone grise autour de la droite) indique que cette tendance est fragile et peu significative
 
 ```{r}
 p3 <- ggplot(df, aes(x = temperature_moyenne, y = ln_morts)) +
@@ -86,52 +72,105 @@ p3 <- ggplot(df, aes(x = temperature_moyenne, y = ln_morts)) +
 
 ggplotly(p3)
 ```
+Une pente positive suggère plus de victimes dans les mois chauds, une pente plate suggère peu de lien brut.
 
 ## Régressions
 
 ### Modèles simples
 
+m_freq, m_dmg, m_dead estiment une relation “brute” entre température et chaque outcome, sans autre contrôle; c’est cohérent avec les droites tracées dans p1–p3.
+
+À lire dans summary() : signe du coefficient de temperature_moyenne (direction), p-value (significativité) et R carré (part de variance expliquée, souvent faible sur des phénomènes rares).
 ```{r}
 m_freq <- lm(nb_desastres ~ temperature_moyenne, data = df)
 m_dmg  <- lm(ln_dommages  ~ temperature_moyenne, data = df)
 m_dead <- lm(ln_morts     ~ temperature_moyenne, data = df)
-
-summary(m_freq)
-summary(m_dmg)
-summary(m_dead)
 ```
 
+```{r}
+summary(m_freq)
+```
+La régression linéaire simple reliant le nombre mensuel de catastrophes à la température moyenne montre une relation légèrement négative : une hausse de 1°C est associée à environ 0,024 catastrophe en moins par mois, mais cet effet n’est pas significatif au seuil de 5% (p = 0,072). De plus, le pouvoir explicatif est très faible (R² ≈ 0,03), ce qui indique que la température seule explique très peu les variations mensuelles du nombre de catastrophes et que d’autres facteurs (notamment la saisonnalité et la tendance) doivent être pris en compte.
+```{r}
+summary(m_dmg)
+```
+Concernant les dommages économiques, la régression simple montre une relation faiblement négative (-0.44) et peu significative (p = 0.08) : une hausse de la température brute tend à être associée à une baisse du logarithme des dommages. Tout comme pour la fréquence, le pouvoir explicatif est anecdotique (R² ≈ 0.03), ce qui confirme que la température seule ne suffit pas à prédire la sévérité économique des catastrophes et qu'il est nécessaire de contrôler la saisonnalité pour obtenir une analyse pertinente
+```{r}
+summary(m_dead)
+```
+Pour le nombre de victimes, le modèle simple révèle une tendance positive presque significative (p = 0.054) : une hausse de 1°C de la température moyenne est associée à une augmentation de l’indice de mortalité (ln_morts) d’environ 0.10. Bien que ce signal soit plus cohérent avec l'intuition (ex: canicules), le faible R² (3.7%) rappelle encore une fois que la température brute reste un déterminant marginal si l'on ne neutralise pas les effets saisonniers et temporels.
+
 ### Contrôle de la saisonnalité + tendance
+
+m_*_fe ajoute factor(month) (contrôle de la saisonnalité) et year (tendance de long terme), donc le coefficient de temperature_moyenne se lit davantage comme un effet “à saison comparable et tendance donnée”.
 
 ```{r}
 m_freq_fe <- lm(nb_desastres ~ temperature_moyenne + factor(month) + year, data = df)
 m_dmg_fe  <- lm(ln_dommages  ~ temperature_moyenne + factor(month) + year, data = df)
 m_dead_fe <- lm(ln_morts     ~ temperature_moyenne + factor(month) + year, data = df)
-
-summary(m_freq_fe)
-summary(m_dmg_fe)
-summary(m_dead_fe)
 ```
 
+```{r}
+summary(m_freq_fe)
+```
+L’ajout des effets fixes (mois et année) change radicalement l’analyse : le coefficient de la température devient positif (+0.07), suggérant qu’à saison donnée, un mois anormalement chaud tend à avoir plus de catastrophes, bien que cet effet ne soit toujours pas statistiquement significatif (p = 0.15). Le modèle met surtout en évidence une forte saisonnalité : par rapport à janvier (référence), les mois de printemps et d’été (notamment juin à septembre) ont significativement moins de catastrophes (tous p < 0.05), ce qui explique pourquoi le modèle simple (sans contrôle saisonnier) donnait un résultat contre-intuitif.
+
+```{r}
+summary(m_dmg_fe)
+```
+Pour les dommages économiques, le modèle avec effets fixes est non concluant : aucun coefficient (ni la température, ni les mois, ni l'année) n'est significatif, et le R² ajusté est même négatif (-0.03), signe que le modèle est moins performant qu'une simple moyenne. Le coefficient de la température devient positif (+0.45), inversant le signe du modèle simple, mais l'erreur standard est si grande que ce résultat n'est pas interprétable statistiquement : les dommages économiques semblent trop aléatoires ou dépendants d'événements ponctuels extrêmes pour être expliqués par ce cadre mensuel.
+
+```{r}
+summary(m_dead_fe)
+```
+L'analyse des décès confirme la difficulté de modéliser les impacts : le modèle complet n'explique rien (R² ajusté négatif de -0.05), et la température perd la quasi-significativité qu'elle avait dans le modèle simple. Le coefficient reste positif (+0.07), mais totalement noyé dans le bruit statistique (p = 0.72), indiquant que la mortalité liée aux catastrophes dépend de facteurs bien plus complexes (type d'événement, localisation, hasard) que la simple température moyenne mensuelle et la saison.
+
+
+
 ### Variante avec anomalie (diff_moyenne_mois)
+
+m_*_gap remplace la température par diff_moyenne_mois (écart à la moyenne historique du même mois), ce qui cible un mécanisme “il fait anormalement chaud pour un mois donné”.
 
 ```{r}
 m_freq_gap <- lm(nb_desastres ~ diff_moyenne_mois + factor(month) + year, data = df)
 m_dmg_gap  <- lm(ln_dommages  ~ diff_moyenne_mois + factor(month) + year, data = df)
 m_dead_gap <- lm(ln_morts     ~ diff_moyenne_mois + factor(month) + year, data = df)
+```
 
+```{r}
 summary(m_freq_gap)
+```
+ le résultat est quasi-identique au modèle précédent (m_freq_fe), avec un coefficient positif (+0.07) indiquant qu'un mois anormalement chaud tend à avoir plus de catastrophes, mais toujours non significatif (p = 0.15). La structure saisonnière reste très marquée (mois d'été significativement moins accidentogènes que janvier), confirmant que c'est bien la saisonnalité intrinsèque, et non l'anomalie thermique ponctuelle, qui structure principalement la fréquence des catastrophes dans cet échantillon.
+
+```{r}
 summary(m_dmg_gap)
+```
+L'analyse des dommages via l'anomalie de température n'apporte pas de meilleure explication (R² ajusté négatif), le coefficient de l'anomalie restant positif (+0.45) mais non significatif (p = 0.65). Seul le mois de juillet se distingue significativement (p = 0.033) avec des dommages structurellement plus faibles par rapport à janvier (-7.8 points de log), mais globalement, ni la tendance annuelle ni l'écart de température ne parviennent à modéliser la sévérité économique des catastrophes.
+​
+```{r}
 summary(m_dead_gap)
 ```
+Enfin, pour les décès modélisés par l'anomalie de température, le constat d'absence de lien robuste persiste (R² ajusté négatif), avec un coefficient d'anomalie toujours non significatif (+0.075, p = 0.71). On note cependant une tendance marginale (p < 0.10) pour le mois d'août, qui présente une mortalité structurellement plus élevée (+1.6 point de log) par rapport à janvier, ce qui pourrait capter l'effet historique des canicules estivales sans que l'anomalie de température mensuelle globale ne suffise à l'expliquer statistiquement.
 
 ### Erreurs-types robustes (HC1)
 
+coeftest(..., vcovHC(type="HC1")) réaffiche les coefficients des modèles *_fe avec des erreurs-types robustes (utile si la variance des erreurs n’est pas constante, ce qui est plausible avec des dommages très asymétriques).
+
 ```{r}
 coeftest(m_freq_fe, vcov. = vcovHC(m_freq_fe, type = "HC1"))
+```
+L'utilisation d'erreurs-types robustes (HC1) change la donne pour le modèle de fréquence : en corrigeant l'hétéroscédasticité, l'erreur standard de la température diminue, rendant son coefficient quasi-significatif au seuil de 10% (p = 0.079). Cela renforce l'hypothèse selon laquelle, une fois la forte saisonnalité contrôlée (les mois d'été restent très significativement moins accidentogènes), une hausse de la température tendrait bien à augmenter la fréquence des catastrophes, un signal qui était masqué par la variance non constante des erreurs dans le modèle standard.
+
+```{r}
 coeftest(m_dmg_fe,  vcov. = vcovHC(m_dmg_fe,  type = "HC1"))
+```
+Pour les dommages économiques, même l'application des erreurs robustes ne sauve pas le modèle : aucun coefficient ne s'approche de la significativité, confirmant le diagnostic initial d'absence de lien statistique clair. La variabilité extrême des coûts (probablement due à quelques rares catastrophes majeures non corrélées linéairement à la température moyenne) rend impossible toute prédiction fiable basée sur ces variables mensuelles agrégées.
+```{r}
 coeftest(m_dead_fe, vcov. = vcovHC(m_dead_fe, type = "HC1"))
 ```
+De même pour la mortalité, la correction robuste confirme l'absence totale de signal (tous p > 0.10) : la température moyenne mensuelle, même corrigée de la saison, n'explique pas les variations du nombre de morts. Cela suggère que les événements meurtriers sont trop idiosyncratiques (dépendants de facteurs locaux, de gestion de crise ou de hasard) pour être captés par une moyenne thermique mensuelle à l'échelle nationale
+
+L'analyse ne permet de prouver aucun lien direct entre la température mensuelle et les catastrophes (fréquence ou gravité). La seule certitude statistique est que les catastrophes suivent un cycle saisonnier (moins fréquentes en été/printemps qu'en hiver). Toute autre tendance observée n'est que du "bruit" statistique ou une tendance trop faible pour être confirmée avec ces données.
 
 ### Tables de résultats (broom)
 
