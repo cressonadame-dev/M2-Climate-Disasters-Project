@@ -1,7 +1,6 @@
 project:
   type: website
-  output-dir: _site
-
+  output-dir: docs
 editor:
   render-on-save: true
 
